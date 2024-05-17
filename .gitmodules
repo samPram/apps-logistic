@@ -1,0 +1,6 @@
+[submodule "be-apps-auth"]
+	path = be-apps-auth
+	url = ../be-apps-auth
+[submodule "be-apps-logistic"]
+	path = be-apps-logistic
+	url = ./be-apps-logistic/
