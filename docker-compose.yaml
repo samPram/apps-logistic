@@ -1,0 +1,67 @@
+version: "3.9"
+
+services:
+  postgres:
+    container_name: pg_logistic
+    image: postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+      PGDATA: /data/pg_logistic
+    volumes:
+      - pg_logistic:/data/pg_logistic
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+    networks:
+      - logistic-network
+
+  auth-service:
+    build: ./be-apps-auth
+    ports:
+      - "4000:4000" # Replace with desired external port
+    depends_on:
+      - postgres
+    volumes:
+      - ./be-apps-auth:/app # Optional: Mount project directory for development
+    environment:
+      - PORT=4000
+      - PG_PORT=5432
+      - PG_HOST=postgres
+      - PG_USER=${POSTGRES_USER:-postgres}
+      - PG_PASS=${POSTGRES_PASSWORD:-password}
+      - PG_DB=postgres
+      - JWT_SECRET=secret
+    networks:
+      - logistic-network
+    extra_hosts:
+      - "data-service:172.17.0.2" # Replace with actual data service container IP
+
+  logistic-service:
+    build: ./be-apps-logistic
+    ports:
+      - "3000:3000" # Replace with desired external port
+    volumes:
+      - ./be-apps-logistic:/app # Optional: Mount project directory for development
+    depends_on:
+      - auth-service
+      - postgres
+    environment:
+      - PORT=3000
+      - PG_PORT=5432
+      - PG_HOST=postgres
+      - PG_USER=${POSTGRES_USER:-postgres}
+      - PG_PASS=${POSTGRES_PASSWORD:-password}
+      - PG_DB=postgres
+      - AUTH_URL=http://auth-service:4000
+    networks:
+      - logistic-network
+
+volumes:
+  auth-service_volume: # Optional: Persistent volume for auth service data (if needed)
+  logistic-service_volume:
+  pg_logistic:
+
+networks:
+  logistic-network:
+    driver: bridge
