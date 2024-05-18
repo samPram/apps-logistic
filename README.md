@@ -53,5 +53,8 @@ From Root Project:
 $ docker compose up
 ```
 
+# REST API Doc Swagger
+Acess http://{base_url}/api for each project
+
 
 ## Running test
